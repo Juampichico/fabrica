@@ -88,7 +88,15 @@ Pantallas.compras = {
         ...c.plan.map((p) => `• ${p.especial.nombre} (para ${p.queso.queso}, ${U.nombreMes(p.queso.mes)})`),
       ];
       const texto = `Comprar (${U.fecha(U.hoy())}):\n${lineas.join('\n')}`;
-      window.open(U.linkWhatsApp('', texto), '_blank');
+      // Copia la lista por las dudas: si WhatsApp no la recibe, se pega a mano
+      navigator.clipboard?.writeText(texto).catch(() => {});
+      // Sin número, "wa.me" en iPhone abre WhatsApp pero pierde el texto; "whatsapp://" lo conserva.
+      if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
+        location.href = 'whatsapp://send?text=' + encodeURIComponent(texto);
+      } else {
+        window.open(U.linkWhatsApp('', texto), '_blank');
+      }
+      U.avisar('Lista copiada · elegí a quién mandarla');
     },
   },
 };
