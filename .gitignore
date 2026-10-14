@@ -1,0 +1,4 @@
+# No se publica: notas internas y configuración local
+CLAUDE.md
+.claude/
+servidor/

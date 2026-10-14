@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="es-AR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Fábrica · Manjares Pampeanos</title>
+  <meta name="theme-color" content="#1a1208">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Fábrica">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="iconos/icono.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="iconos/icono-180.png">
+  <link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+  <div id="banda-prueba" class="banda-prueba" hidden>MODO PRUEBA · estos datos no se mezclan con los reales</div>
+
+  <header class="cabecera">
+    <button id="btn-volver" class="cabecera-volver" hidden aria-label="Volver">‹</button>
+    <h1 id="titulo">Hoy</h1>
+    <span id="estado-conexion" class="pastilla"></span>
+  </header>
+
+  <div id="banda-conexion" class="banda-conexion" hidden></div>
+
+  <main id="contenido"></main>
+
+  <button id="btn-agregar" class="boton-agregar" hidden aria-label="Agregar">+</button>
+
+  <nav class="menu" id="menu">
+    <a href="#hoy" data-ruta="hoy"><span class="menu-icono">🏠</span>Hoy<b class="globo" data-globo="hoy"></b></a>
+    <a href="#tareas" data-ruta="tareas"><span class="menu-icono">✅</span>Tareas<b class="globo" data-globo="tareas"></b></a>
+    <a href="#stock" data-ruta="stock"><span class="menu-icono">📦</span>Stock</a>
+    <a href="#compras" data-ruta="compras"><span class="menu-icono">🛒</span>Compras<b class="globo" data-globo="compras"></b></a>
+    <a href="#mas" data-ruta="mas"><span class="menu-icono">☰</span>Más<b class="globo" data-globo="mas"></b></a>
+  </nav>
+
+  <!-- Hoja que sube desde abajo (formularios y confirmaciones) -->
+  <div id="hoja-fondo" class="hoja-fondo" hidden>
+    <section id="hoja" class="hoja" role="dialog" aria-modal="true"></section>
+  </div>
+  <div id="aviso" class="aviso" hidden></div>
+
+  <!-- Orden: utilidades → datos → cálculos → pantallas → arranque -->
+  <script src="js/util.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/sincro.js"></script>
+  <script src="js/datos.js"></script>
+  <script src="js/semilla.js"></script>
+  <script src="js/calculos.js"></script>
+  <script src="js/hoja.js"></script>
+  <script src="js/pantallas/hoy.js"></script>
+  <script src="js/pantallas/tareas.js"></script>
+  <script src="js/pantallas/stock.js"></script>
+  <script src="js/pantallas/compras.js"></script>
+  <script src="js/pantallas/plan.js"></script>
+  <script src="js/pantallas/equipos.js"></script>
+  <script src="js/pantallas/checklist.js"></script>
+  <script src="js/pantallas/mas.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
