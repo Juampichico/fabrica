@@ -49,8 +49,11 @@ const Hoja = {
         break;
       default: {
         const tipos = { fecha: 'date', mes: 'month', texto: 'text' };
+        // "sugerencias": lista para elegir mientras se escribe (ej. proveedores ya cargados)
+        const lista = c.sugerencias?.length
+          ? `<datalist id="${id}-lista">${c.sugerencias.map((s) => `<option value="${U.esc(s)}">`).join('')}</datalist>` : '';
         control = `<input id="${id}" name="${c.nombre}" type="${tipos[c.tipo] || 'text'}" value="${U.esc(v)}"${ph}
-          ${c.tipo === 'texto' || !c.tipo ? 'autocomplete="off"' : ''}>`;
+          ${lista ? `list="${id}-lista"` : ''} ${c.tipo === 'texto' || !c.tipo ? 'autocomplete="off"' : ''}>${lista}`;
       }
     }
     return `<div class="campo"><label for="${id}">${U.esc(c.etiqueta)}</label>${control}${nota}</div>`;

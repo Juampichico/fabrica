@@ -32,6 +32,21 @@ const Calc = {
     return res.sort((a, b) => a.limite.localeCompare(b.limite));
   },
 
+  // ---- Proveedores (salen de lo cargado en cada insumo) ----
+  mismoProveedor(a, b) {
+    return !!a && !!b && a.trim().toLowerCase() === b.trim().toLowerCase();
+  },
+  proveedores() {
+    const lista = [];
+    Datos.lista('insumos').forEach((i) => {
+      if (!i.proveedor?.trim()) return;
+      const p = lista.find((x) => Calc.mismoProveedor(x.nombre, i.proveedor));
+      if (!p) lista.push({ nombre: i.proveedor.trim(), telefono: i.telefono || '' });
+      else if (!p.telefono && i.telefono) p.telefono = i.telefono;
+    });
+    return lista.sort((a, b) => a.nombre.localeCompare(b.nombre));
+  },
+
   // ---- Lista de compras ----
   compras() {
     const insumos = Datos.lista('insumos').filter(Calc.bajoMinimo)

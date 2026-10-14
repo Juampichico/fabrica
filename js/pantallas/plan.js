@@ -81,6 +81,7 @@ Pantallas.plan = {
           ...(eid ? [{ nombre: 'listo', etiqueta: 'Ya está pedido / comprado', tipo: 'si-no', valor: e.listo }] : []),
         ],
         alGuardar(v) {
+          if (v.demora < 0 || v.demora > 365) { U.avisar('Los días que tarda tienen que ser entre 0 y 365'); return false; }
           const otros = (q.especiales || []).filter((x) => x.id !== eid);
           const nuevo = { ...e, id: eid || U.id(), nombre: v.nombre, demora: v.demora, listo: !!v.listo };
           if (v.listo && !e.listo) Object.assign(nuevo, { listoPor: Datos.usuario, listoEl: U.hoy() });

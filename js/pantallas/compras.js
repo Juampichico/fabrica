@@ -7,14 +7,49 @@ Pantallas.compras = {
     const C = Pantallas.compras;
     const hayAlgo = c.total + c.enCamino.length > 0;
     return `
-      ${c.total ? `<button class="btn btn-wa btn-ancho" data-accion="compras.whatsapp">💬 Mandar la lista por WhatsApp</button>` : ''}
       ${c.plan.length ? `<div class="seccion">Para el plan de quesos <span class="cuenta">${c.plan.length}</span></div>
         ${c.plan.map(C.tarjetaPlan).join('')}` : ''}
-      ${c.faltan.length ? `<div class="seccion">Faltan en el stock <span class="cuenta">${c.faltan.length}</span></div>
-        ${c.faltan.map(C.tarjetaInsumo).join('')}` : ''}
+      ${C.porProveedor(c.faltan).map(C.bloqueProveedor).join('')}
       ${c.enCamino.length ? `<div class="seccion">Pedidos, falta que lleguen <span class="cuenta">${c.enCamino.length}</span></div>
         ${c.enCamino.map(C.tarjetaInsumo).join('')}` : ''}
       ${hayAlgo ? '' : '<div class="vacio">✓ No hay nada para comprar</div>'}`;
+  },
+
+  // Agrupa lo que falta por proveedor; lo que no tiene proveedor va al final.
+  porProveedor(insumos) {
+    const grupos = [];
+    insumos.forEach((i) => {
+      const nombre = i.proveedor?.trim() || '';
+      let g = grupos.find((x) => (nombre ? Calc.mismoProveedor(x.nombre, nombre) : !x.nombre));
+      if (!g) grupos.push((g = { nombre, insumos: [] }));
+      g.insumos.push(i);
+    });
+    grupos.forEach((g) => (g.telefono = Calc.proveedores().find((p) => Calc.mismoProveedor(p.nombre, g.nombre))?.telefono || ''));
+    return grupos.sort((a, b) => (!a.nombre) - (!b.nombre) || a.nombre.localeCompare(b.nombre));
+  },
+
+  // Mensaje con todo lo que hay que pedirle a un proveedor
+  mensaje(g) {
+    const lineas = g.insumos.map((i) =>
+      `• ${i.pedir ? `${i.pedir} ${i.unidad || ''} de ` : ''}${i.nombre}`.replace(/\s+/g, ' '));
+    return `Hola! Te paso el pedido de Manjares Pampeanos:\n${lineas.join('\n')}\n\nGracias!`;
+  },
+
+  bloqueProveedor(g) {
+    const C = Pantallas.compras;
+    const nombre = g.nombre ? `🏪 ${U.esc(g.nombre)}` : 'Sin proveedor';
+    let botones = '';
+    if (g.nombre && g.telefono) {
+      botones = `<div class="fila-botones">
+          <a class="btn btn-wa" href="${U.linkWhatsApp(g.telefono, C.mensaje(g))}" target="_blank" rel="noopener"
+            style="text-align:center;text-decoration:none">💬 Pedirle todo a ${U.esc(g.nombre)}</a></div>
+        <button class="btn btn-ancho btn-chico" data-accion="compras.pedidoTodo" data-id="${U.esc(g.nombre)}">Ya se lo pedí todo</button>`;
+    } else if (g.nombre) {
+      botones = `<p class="ayuda">Para pedirle por WhatsApp, cargale el teléfono a ${U.esc(g.nombre)}: tocá cualquiera de sus insumos en Stock.</p>`;
+    }
+    return `<div class="seccion">${nombre} <span class="cuenta">${g.insumos.length}</span></div>
+      ${botones}
+      ${g.insumos.map(C.tarjetaInsumo).join('')}`;
   },
 
   tarjetaInsumo(i) {
@@ -33,7 +68,6 @@ Pantallas.compras = {
           <div class="tarjeta-detalle">${det.join(' · ')}</div>
           ${estado}
           <div class="fila-botones">
-            ${i.telefono ? `<a class="btn btn-wa btn-chico" href="${U.linkWhatsApp(i.telefono, `Hola! Necesito ${i.pedir ? i.pedir + ' ' + (i.unidad || '') + ' de ' : ''}${i.nombre}. Gracias!`)}" target="_blank" rel="noopener" style="text-align:center;text-decoration:none">💬 ${U.esc(i.proveedor || 'Proveedor')}</a>` : ''}
             ${i.pedidoEl ? '' : `<button class="btn btn-chico" data-accion="compras.pedido" data-id="${i.id}">Lo pedí</button>`}
             <button class="btn btn-hecho btn-chico" data-accion="compras.comprado" data-id="${i.id}">✓ ${i.pedidoEl ? 'Llegó' : 'Comprado'}</button>
           </div>
@@ -81,22 +115,12 @@ Pantallas.compras = {
         U.avisar(`+${n} ${i.nombre} ✓`);
       };
     },
-    whatsapp() {
-      const c = Calc.compras();
-      const lineas = [
-        ...c.faltan.map((i) => `• ${i.pedir ? i.pedir + ' ' + (i.unidad || '') + ' ' : ''}${i.nombre}`.replace(/\s+/g, ' ')),
-        ...c.plan.map((p) => `• ${p.especial.nombre} (para ${p.queso.queso}, ${U.nombreMes(p.queso.mes)})`),
-      ];
-      const texto = `Comprar (${U.fecha(U.hoy())}):\n${lineas.join('\n')}`;
-      // Copia la lista por las dudas: si WhatsApp no la recibe, se pega a mano
-      navigator.clipboard?.writeText(texto).catch(() => {});
-      // Sin número, "wa.me" en iPhone abre WhatsApp pero pierde el texto; "whatsapp://" lo conserva.
-      if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
-        location.href = 'whatsapp://send?text=' + encodeURIComponent(texto);
-      } else {
-        window.open(U.linkWhatsApp('', texto), '_blank');
-      }
-      U.avisar('Lista copiada · elegí a quién mandarla');
+    // Marca como pedido todo lo que falta de un proveedor (después de mandarle el WhatsApp)
+    pedidoTodo(proveedor) {
+      const insumos = Calc.compras().faltan.filter((i) => Calc.mismoProveedor(i.proveedor, proveedor));
+      insumos.forEach((i) => Datos.poner('insumos', { id: i.id, pedidoEl: U.hoy(), pedidoPor: Datos.usuario }, { silencioso: true }));
+      Datos.guardar();
+      U.avisar(`${U.plural(insumos.length, 'cosa marcada', 'cosas marcadas')} como pedidas a ${proveedor}`);
     },
   },
 };
