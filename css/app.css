@@ -217,3 +217,8 @@ main { padding: 16px 16px 90px; max-width: 640px; margin: 0 auto; }
 /* ===== Aviso de sin conexión ===== */
 .banda-conexion { background: var(--rojo-claro); color: var(--rojo); font-size: 14px; font-weight: 600;
   padding: 8px 16px; text-align: center; }
+
+/* ===== Deslizar para actualizar ===== */
+.deslizar { display: flex; align-items: flex-end; justify-content: center; overflow: hidden;
+  color: var(--suave); font-size: 14px; font-weight: 700; padding-bottom: 6px; }
+.deslizar.listo { color: var(--oxido); }

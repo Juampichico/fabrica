@@ -18,6 +18,7 @@ const App = {
     document.getElementById('btn-volver').onclick = () => (location.hash = Pantallas[App.ruta].volver);
     document.getElementById('btn-agregar').onclick = () => Pantallas[App.ruta].agregar();
     document.addEventListener('click', App.repartirClick);
+    App.iniciarDeslizar();
     App.leerRuta();
     if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
       navigator.serviceWorker.register('sw.js').catch(() => {});
@@ -81,6 +82,38 @@ const App = {
     const banda = document.getElementById('banda-conexion');
     banda.hidden = !mal || !Datos.usuario;
     banda.textContent = 'Sin conexión: ves lo último que se cargó. Lo que anotes se manda solo cuando vuelva.';
+  },
+
+  // Deslizar para abajo desde arriba de todo: trae lo último de todos y recarga la app
+  // (instalada en el iPhone no tiene esto de fábrica).
+  iniciarDeslizar() {
+    const aviso = document.getElementById('deslizar');
+    const ALCANZA = 130; // cuánto hay que deslizar (en píxeles)
+    let inicio = null;
+    let recorrido = 0;
+    addEventListener('touchstart', (ev) => {
+      const arriba = window.scrollY <= 0 && document.getElementById('hoja-fondo').hidden;
+      inicio = arriba ? ev.touches[0].clientY : null;
+      recorrido = 0;
+    }, { passive: true });
+    addEventListener('touchmove', (ev) => {
+      if (inicio === null) return;
+      recorrido = ev.touches[0].clientY - inicio;
+      if (recorrido < 15) { aviso.hidden = true; return; }
+      const listo = recorrido >= ALCANZA;
+      aviso.hidden = false;
+      aviso.style.height = Math.min(recorrido / 2, 70) + 'px';
+      aviso.classList.toggle('listo', listo);
+      aviso.textContent = listo ? '↻ Soltá para actualizar' : '↓ Deslizá para actualizar';
+    }, { passive: true });
+    addEventListener('touchend', async () => {
+      if (inicio === null) return;
+      inicio = null;
+      if (recorrido < ALCANZA) { aviso.hidden = true; return; }
+      aviso.textContent = 'Actualizando…';
+      await Sincro.ya(); // primero manda lo que haya pendiente, así no se pierde nada
+      location.reload();
+    });
   },
 
   repartirClick(ev) {
